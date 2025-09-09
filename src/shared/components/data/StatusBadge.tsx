@@ -1,4 +1,3 @@
-// src/shared/components/data/StatusBadge.tsx
 import { Badge } from '@mantine/core';
 import { JSX } from 'react';
 import { TaskPriority, TaskStatus } from '@/modules/tasks/types';

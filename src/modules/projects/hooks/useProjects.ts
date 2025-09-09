@@ -2,10 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createProject,
   deleteProject,
+  getDashboardData,
   listProjects,
   updateProject,
 } from '@/modules/projects/services/projects.api';
-import { Project } from '@/modules/projects/types';
+import { DashboardData, Project } from '@/modules/projects/types';
 import { ProjectInput } from '@/modules/projects/schemas';
 
 export const projectsKeys = {
@@ -42,5 +43,13 @@ export const useDeleteProject = () => {
   return useMutation<{ id: number }, Error, { id: number }>({
     mutationFn: ({ id }) => deleteProject(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: projectsKeys.all }),
+  });
+};
+
+export const useDashboardData = (projectId: number | null) => {
+  return useQuery<DashboardData, Error>({
+    queryKey: ['dashboard', projectId],
+    queryFn: () => getDashboardData(projectId),
+    staleTime: 30_000,
   });
 };

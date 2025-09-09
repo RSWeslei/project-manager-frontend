@@ -4,11 +4,6 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 const baseUrl = import.meta.env.VITE_API_URL;
 
-type JsonHeaders = {
-  'Content-Type': 'application/json';
-  Authorization?: string;
-};
-
 const parse = async <T>(res: Response): Promise<T> => {
   const text = await res.text();
   const parsed = text ? (JSON.parse(text) as unknown) : ({} as unknown);
@@ -28,19 +23,30 @@ const parse = async <T>(res: Response): Promise<T> => {
   return parsed as T;
 };
 
-export const request = async <TBody extends Record<string, unknown> | undefined, TResponse>(
+export const request = async <TBody extends Record<string, unknown> | FormData | undefined, TResponse>(
   method: HttpMethod,
   path: string,
   body?: TBody,
 ): Promise<TResponse> => {
   const url = `${baseUrl ?? ''}${path}`;
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-  const headers: JsonHeaders = { 'Content-Type': 'application/json' };
+
+  const headers: HeadersInit = {};
   if (token) headers.Authorization = `Bearer ${token}`;
+
+  let bodyInit: BodyInit | undefined = undefined;
+
+  if (body instanceof FormData) {
+    bodyInit = body;
+  } else if (body) {
+    headers['Content-Type'] = 'application/json';
+    bodyInit = JSON.stringify(body);
+  }
+
   const init: RequestInit = {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: bodyInit,
   };
   const res = await fetch(url, init);
   return parse<TResponse>(res);
@@ -53,6 +59,11 @@ export const post = async <TBody extends Record<string, unknown>, TResponse>(
   path: string,
   body: TBody,
 ): Promise<TResponse> => request<TBody, TResponse>('POST', path, body);
+
+export const postForm = async <TResponse>(
+  path: string,
+  body: FormData,
+): Promise<TResponse> => request<FormData, TResponse>('POST', path, body);
 
 export const patch = async <TBody extends Record<string, unknown>, TResponse>(
   path: string,

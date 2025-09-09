@@ -1,5 +1,5 @@
 import { LoginData, User } from '@/modules/auth/types';
-import { get, post } from '@/shared/lib/http/client';
+import { get, post, postForm } from '@/shared/lib/http/client';
 
 export type LoginPayload = {
   email: string;
@@ -28,4 +28,10 @@ export const login = async (payload: LoginPayload): Promise<LoginData> => {
 
 export const profile = async (): Promise<User> => {
   return get<User>('/auth/profile');
+};
+
+export const uploadUserPhoto = async (file: File): Promise<User> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return postForm<User>('/users/photo', formData);
 };

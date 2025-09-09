@@ -1,283 +1,177 @@
-// src/modules/app/pages/DashboardPage.tsx
-/*
-import { JSX, useEffect, useMemo, useState } from 'react';
-import { getOverview } from '@/modules/analytics/services/analytics.api';
-import { listMyTasks } from '@/modules/tasks/services/tasks.api';
-import { listActivity } from '@/modules/activity/services/activity.api';
-import { listActiveProjects } from '@/modules/projects/services/projects.api';
-import { Project } from '@/modules/projects/types';
-import { useToast } from '@/shared/components/ui/Toast';
+import { useState, useMemo } from 'react';
+import { Card, Grid, Group, NativeSelect, Stack, Text, Title, Table, Skeleton } from '@mantine/core';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { useProjectsList, useDashboardData } from '@/modules/projects/hooks/useProjects';
+import { useTasksList } from '@/modules/tasks/hooks/useTasks';
+import { TaskStatusBadge } from '@/shared/components/data/StatusBadge';
+import { Task } from '@/modules/tasks/types';
+import { DashboardTasksByStatus } from '@/modules/projects/types';
 
-const toISO = (d: Date): string => d.toISOString().split('T')[0];
-const startOfToday = (): Date => {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
+const STATUS_COLORS: Record<string, string> = {
+  done: 'var(--mantine-color-teal-6)',
+  in_progress: 'var(--mantine-color-blue-6)',
+  review: 'var(--mantine-color-yellow-6)',
+  todo: 'var(--mantine-color-gray-6)',
 };
 
-const DashboardPage = (): JSX.Element => {
-  const { push } = useToast();
+const STATUS_LABELS: Record<string, string> = {
+  done: 'Concluída',
+  in_progress: 'Em Progresso',
+  review: 'Revisão',
+  todo: 'Pendente',
+};
 
-  const today = useMemo(() => startOfToday(), []);
-  const [from, setFrom] = useState<string>(
-    toISO(new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000)),
+const DashboardPage = () => {
+  const [projectId, setProjectId] = useState<string>('');
+
+  const { data: projects, isLoading: isLoadingProjects } = useProjectsList({});
+
+  const selectedProjectId = projectId ? Number(projectId) : null;
+
+  const { data: dashboardData, isLoading: isLoadingDashboard } = useDashboardData(selectedProjectId);
+
+  const { data: recentTasks, isLoading: isLoadingTasks } = useTasksList({
+    projectId: selectedProjectId ?? undefined,
+  });
+
+  const kpis = useMemo(
+    () => dashboardData?.kpis || { totalTasks: 0, completedTasks: 0, pendingTasks: 0, overdueTasks: 0 },
+    [dashboardData]
   );
-  const [to, setTo] = useState<string>(toISO(today));
-  const [projectId, setProjectId] = useState<number | null>(null);
 
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loadingProjects, setLoadingProjects] = useState<boolean>(true);
+  const tasksPerUser = useMemo(() => dashboardData?.tasksPerUser || [], [dashboardData]);
 
-  const [kpi, setKpi] = useState<{
-    open: number;
-    overdue: number;
-    critical: number;
-    activeProjects: number;
-  } | null>(null);
-  const [loadingKpi, setLoadingKpi] = useState<boolean>(true);
+  const tasksByStatus = useMemo(() => {
+    return (
+      dashboardData?.tasksByStatus?.map((item: DashboardTasksByStatus) => ({
+        name: STATUS_LABELS[item.status] || item.status,
+        value: Number(item.count),
+        fill: STATUS_COLORS[item.status] || '#ccc',
+      })) || []
+    );
+  }, [dashboardData]);
 
-  const [myTasks, setMyTasks] = useState<
-    Array<{
-      id: number;
-      title: string;
-      status: string;
-      priority: string;
-      dueDate?: string | null;
-      assigneeName?: string;
-    }>
-  >([]);
-  const [loadingTasks, setLoadingTasks] = useState<boolean>(true);
-
-  const [activity, setActivity] = useState<
-    Array<{ id: number; message: string; createdAt: string; actor: string }>
-  >([]);
-  const [loadingActivity, setLoadingActivity] = useState<boolean>(true);
-
-  useEffect(() => {
-    let canceled = false;
-    const loadProjects = async () => {
-      try {
-        setLoadingProjects(true);
-        const data = await listActiveProjects();
-        if (canceled) return;
-        setProjects(data);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Falha ao buscar projetos';
-        push({ title: 'Erro', description: msg, variant: 'error' });
-      } finally {
-        if (!canceled) setLoadingProjects(false);
-      }
-    };
-    loadProjects();
-    return () => {
-      canceled = true;
-    };
-  }, [push]);
-
-  useEffect(() => {
-    let canceled = false;
-    const fetchAll = async () => {
-      try {
-        setLoadingKpi(true);
-        const overview = await getOverview({ projectId, from, to });
-        if (!canceled) {
-          setKpi({
-            open: overview.kpis.openTasks,
-            overdue: overview.kpis.overdueTasks,
-            critical: overview.kpis.criticalTasks,
-            activeProjects: overview.kpis.activeProjects,
-          });
-        }
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Falha ao carregar métricas';
-        push({ title: 'Erro', description: msg, variant: 'error' });
-      } finally {
-        if (!canceled) setLoadingKpi(false);
-      }
-
-      try {
-        setLoadingTasks(true);
-        const tasks = await listMyTasks({ from, to });
-        if (!canceled) {
-          setMyTasks(
-            tasks.map((t) => ({
-              id: t.id,
-              title: t.title,
-              status: t.status,
-              priority: t.priority,
-              dueDate: t.dueDate ?? undefined,
-              assigneeName: t.assignee?.name,
-            })),
-          );
-        }
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Falha ao carregar tarefas';
-        push({ title: 'Erro', description: msg, variant: 'error' });
-      } finally {
-        if (!canceled) setLoadingTasks(false);
-      }
-
-      try {
-        setLoadingActivity(true);
-        const feed = await listActivity({ projectId, from, to, limit: 10 });
-        if (!canceled) {
-          setActivity(
-            feed.map((a) => ({
-              id: a.id,
-              message: a.message,
-              createdAt: a.createdAt,
-              actor: a.actor.name,
-            })),
-          );
-        }
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : 'Falha ao carregar atividades';
-        push({ title: 'Erro', description: msg, variant: 'error' });
-      } finally {
-        if (!canceled) setLoadingActivity(false);
-      }
-    };
-    fetchAll();
-    return () => {
-      canceled = true;
-    };
-  }, [projectId, from, to, push]);
+  const barsKey = `${selectedProjectId}-${tasksPerUser.length}`;
+  const pieKey = `${selectedProjectId}-${tasksByStatus.length}`;
 
   return (
-    <div className="grid gap-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="flex flex-1 flex-col gap-1">
-          <label className="text-muted text-sm">Projeto</label>
-          <select
-            value={projectId ?? ''}
-            onChange={(e) => setProjectId(e.target.value ? Number(e.target.value) : null)}
-            className="input"
-            disabled={loadingProjects}
-          >
-            <option value="">Todos os projetos</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
+    <Stack gap="lg">
+      <Group justify="space-between">
+        <Title order={2}>Dashboard</Title>
+        <NativeSelect
+          value={projectId}
+          onChange={(e) => setProjectId(e.currentTarget.value)}
+          data={[{ value: '', label: 'Todos os projetos' }, ...(projects || []).map(p => ({ value: String(p.id), label: p.name }))]}
+          disabled={isLoadingProjects}
+        />
+      </Group>
+
+      <Grid>
+        {[
+          { label: 'Total de Tarefas', value: kpis.totalTasks, color: 'gray' },
+          { label: 'Concluídas', value: kpis.completedTasks, color: 'teal' },
+          { label: 'Pendentes', value: kpis.pendingTasks, color: 'blue' },
+          { label: 'Atrasadas', value: kpis.overdueTasks, color: 'red' },
+        ].map(kpi => (
+          <Grid.Col key={kpi.label} span={{ base: 12, sm: 6, lg: 3 }}>
+            <Card withBorder radius="md" p="md">
+              <Text size="sm" c="dimmed">{kpi.label}</Text>
+              <Skeleton visible={isLoadingDashboard} width="50%" mt={8}>
+                <Title order={2} mt={4} c={kpi.color}>{kpi.value}</Title>
+              </Skeleton>
+            </Card>
+          </Grid.Col>
+        ))}
+      </Grid>
+
+      <Grid>
+        <Grid.Col span={{ base: 12, lg: 8 }}>
+          <Card withBorder radius="md" p="lg" h="100%">
+            <Title order={4} mb="lg">Tarefas por Colaborador</Title>
+            <Skeleton visible={isLoadingDashboard} height={300}>
+              {!isLoadingDashboard && tasksPerUser.length > 0 ? (
+                <ResponsiveContainer key={barsKey} width="100%" height={300}>
+                  <BarChart data={tasksPerUser} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                    <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+                    <XAxis dataKey="user" fontSize={12} tick={{ fill: 'var(--mantine-color-dimmed)' }} />
+                    <YAxis tick={{ fill: 'var(--mantine-color-dimmed)' }} />
+                    <Tooltip
+                      wrapperStyle={{ outline: 'none' }}
+                      contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--fg)' }}
+                      labelStyle={{ color: 'var(--mantine-color-dimmed)' }}
+                      itemStyle={{ color: 'var(--fg)' }}
+                    />
+                    <Legend wrapperStyle={{ color: 'var(--mantine-color-dimmed)' }} />
+                    <Bar dataKey="tasks" fill="var(--mantine-color-violet-6)" name="Tarefas" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                !isLoadingDashboard && <Text c="dimmed" ta="center">Sem dados</Text>
+              )}
+            </Skeleton>
+          </Card>
+        </Grid.Col>
+
+        <Grid.Col span={{ base: 12, lg: 4 }}>
+          <Card withBorder radius="md" p="lg" h="100%">
+            <Title order={4} mb="lg" ta="center">Tarefas por Status</Title>
+            <Skeleton visible={isLoadingDashboard} height={300}>
+              {!isLoadingDashboard && tasksByStatus.length > 0 ? (
+                <ResponsiveContainer key={pieKey} width="100%" height={300}>
+                  <PieChart>
+                    <Pie data={tasksByStatus} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                      {tasksByStatus.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      wrapperStyle={{ outline: 'none' }}
+                      contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--fg)' }}
+                      labelStyle={{ color: 'var(--mantine-color-dimmed)' }}
+                      itemStyle={{ color: 'var(--fg)' }}
+                    />
+                    <Legend wrapperStyle={{ color: 'var(--mantine-color-dimmed)' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                !isLoadingDashboard && <Text c="dimmed" ta="center">Sem dados</Text>
+              )}
+            </Skeleton>
+          </Card>
+        </Grid.Col>
+      </Grid>
+
+      <Card withBorder radius="md" p="0">
+        <Title order={4} m="lg" mb={0}>Tarefas Recentes</Title>
+        <Table verticalSpacing="sm" striped highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Tarefa</Table.Th>
+              <Table.Th>Projeto</Table.Th>
+              <Table.Th>Status</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {isLoadingTasks ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <Table.Tr key={index}>
+                  <Table.Td><Skeleton height={8} radius="xl" /></Table.Td>
+                  <Table.Td><Skeleton height={8} radius="xl" /></Table.Td>
+                  <Table.Td><Skeleton height={8} radius="xl" width="70%" /></Table.Td>
+                </Table.Tr>
+              ))
+            ) : (recentTasks || []).map((task: Task) => (
+              <Table.Tr key={task.id}>
+                <Table.Td>{task.title}</Table.Td>
+                <Table.Td>{task.project?.name || 'N/A'}</Table.Td>
+                <Table.Td><TaskStatusBadge status={task.status} /></Table.Td>
+              </Table.Tr>
             ))}
-          </select>
-        </div>
-        <div className="flex gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-muted text-sm">De</label>
-            <input
-              type="date"
-              className="input"
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-muted text-sm">Até</label>
-            <input
-              type="date"
-              className="input"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="card p-4">
-          <div className="text-muted text-sm">Tarefas abertas</div>
-          <div className="mt-1 text-2xl font-semibold">{loadingKpi || !kpi ? '—' : kpi.open}</div>
-        </div>
-        <div className="card p-4">
-          <div className="text-muted text-sm">Atrasadas</div>
-          <div className="mt-1 text-2xl font-semibold">
-            {loadingKpi || !kpi ? '—' : kpi.overdue}
-          </div>
-        </div>
-        <div className="card p-4">
-          <div className="text-muted text-sm">Críticas</div>
-          <div className="mt-1 text-2xl font-semibold">
-            {loadingKpi || !kpi ? '—' : kpi.critical}
-          </div>
-        </div>
-        <div className="card p-4">
-          <div className="text-muted text-sm">Projetos ativos</div>
-          <div className="mt-1 text-2xl font-semibold">
-            {loadingKpi || !kpi ? '—' : kpi.activeProjects}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="card p-6">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold">Minhas tarefas</h2>
-          </div>
-          <div className="grid gap-2">
-            {loadingTasks ? (
-              <div className="text-muted text-sm">carregando...</div>
-            ) : myTasks.length === 0 ? (
-              <div className="text-muted text-sm">Nenhuma tarefa no intervalo</div>
-            ) : (
-              myTasks.slice(0, 6).map((t) => (
-                <div
-                  key={t.id}
-                  className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2"
-                >
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-medium">{t.title}</div>
-                    <div className="text-muted truncate text-xs">
-                      {t.status} • {t.priority}
-                      {t.dueDate ? ` • vence em ${new Date(t.dueDate).toLocaleDateString()}` : ''}
-                    </div>
-                  </div>
-                  <button className="btn btn-outline h-9 px-3 text-sm">Abrir</button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="card p-6">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold">Atividade recente</h2>
-          </div>
-          <div className="grid gap-2">
-            {loadingActivity ? (
-              <div className="text-muted text-sm">carregando...</div>
-            ) : activity.length === 0 ? (
-              <div className="text-muted text-sm">Sem eventos no intervalo</div>
-            ) : (
-              activity.map((a) => (
-                <div
-                  key={a.id}
-                  className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2"
-                >
-                  <div className="min-w-0">
-                    <div className="truncate text-sm">{a.message}</div>
-                    <div className="text-muted truncate text-xs">
-                      {a.actor} • {new Date(a.createdAt).toLocaleString()}
-                    </div>
-                  </div>
-                  <button className="btn btn-outline h-9 px-3 text-sm">Ver</button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+          </Table.Tbody>
+        </Table>
+      </Card>
+    </Stack>
   );
-};
-
-export default DashboardPage;
-*/
-
-import { JSX } from 'react';
-
-const DashboardPage = (): JSX.Element => {
-  return <div className="text-muted text-sm">Dashboard desativado temporariamente</div>;
 };
 
 export default DashboardPage;

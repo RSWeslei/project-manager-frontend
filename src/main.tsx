@@ -14,7 +14,7 @@ if (!rootEl) throw new Error('root não encontrado');
 const queryClient = new QueryClient();
 
 createRoot(rootEl).render(
-  <MantineProvider theme={theme} cssVariablesResolver={cssVarsResolver} defaultColorScheme="light">
+  <MantineProvider theme={theme} cssVariablesResolver={cssVarsResolver} defaultColorScheme="dark">
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <RouterProvider router={router} />

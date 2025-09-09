@@ -1,7 +1,6 @@
-// src/modules/projects/services/projects.api.ts
 import { get, post, patch, del } from '@/shared/lib/http/client';
 import { qs } from '@/shared/lib/http/query';
-import { Project } from '@/modules/projects/types';
+import { Project, DashboardData } from '@/modules/projects/types';
 import { ProjectInput } from '@/modules/projects/schemas';
 
 export const listProjects = async (params?: { status?: string; q?: string }): Promise<Project[]> => {
@@ -25,4 +24,9 @@ export const updateProject = async (id: number, payload: ProjectInput): Promise<
 
 export const deleteProject = async (id: number): Promise<{ id: number }> => {
   return del<{ id: number }>(`/projects/${id}`);
+};
+
+export const getDashboardData = async (projectId?: number | null): Promise<DashboardData> => {
+  const query = qs({ projectId: projectId ?? undefined });
+  return get<DashboardData>(`/projects/dashboard${query}`);
 };

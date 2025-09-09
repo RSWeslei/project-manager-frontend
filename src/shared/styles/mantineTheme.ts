@@ -41,8 +41,8 @@ export const theme = createTheme({
     Modal: {
       defaultProps: { radius: 'lg', centered: true },
       styles: {
-        content: { backgroundColor: 'var(--surface)', color: 'var(--fg)' },
-        header: { backgroundColor: 'var(--surface)', borderBottomColor: 'var(--border)' },
+        content: { backgroundColor: 'var(--surface-elev)', color: 'var(--fg)' },
+        header: { backgroundColor: 'var(--surface-elev)', borderBottomColor: 'var(--border)' },
         title: { color: 'var(--fg)' },
       },
     },
@@ -75,11 +75,11 @@ export const cssVarsResolver: CSSVariablesResolver = () => ({
     '--mantine-radius-default': '14px',
     '--mantine-shadow-lg': 'var(--shadow)',
     '--mantine-color-anchor': 'var(--primary)',
-
-    // força a paleta "violet" a seguir teu --primary
     '--mantine-color-violet-5': 'color-mix(in oklab, var(--primary) 88%, white)',
     '--mantine-color-violet-6': 'var(--primary)',
     '--mantine-color-violet-7': 'color-mix(in oklab, var(--primary) 88%, black)',
+    '--surface-elev': 'color-mix(in oklab, var(--surface) 85%, black)',
+    '--border-soft': 'color-mix(in oklab, var(--border) 60%, transparent)',
   },
   light: {},
   dark: {},

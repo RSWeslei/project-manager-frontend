@@ -1,7 +1,6 @@
-// src/shared/components/ui/Sidebar.tsx
 import { JSX, useEffect, useMemo, useState } from 'react';
 import { NavLink } from 'react-router';
-import { LayoutDashboard, ListTodo, FolderKanban, Users, Settings } from 'lucide-react';
+import { LayoutDashboard, ListTodo, FolderKanban, Users, Settings, ChevronsLeft } from 'lucide-react';
 
 export type NavItem = {
   key: string;
@@ -56,12 +55,12 @@ const DEFAULT_ITEMS: NavItem[] = [
 const STORAGE_KEY = 'taskhub_sidebar_collapsed';
 
 export const Sidebar = ({
-  items,
-  collapsed,
-  onToggleCollapsed,
-  mobileOpen,
-  onCloseMobile,
-}: Props): JSX.Element => {
+                          items,
+                          collapsed,
+                          onToggleCollapsed,
+                          mobileOpen,
+                          onCloseMobile,
+                        }: Props): JSX.Element => {
   const navItems = useMemo(() => items ?? DEFAULT_ITEMS, [items]);
   const [internalCollapsed, setInternalCollapsed] = useState<boolean>(false);
 
@@ -111,11 +110,12 @@ export const Sidebar = ({
                   isActive
                     ? 'bg-[color-mix(in_oklab,var(--primary)_14%,var(--surface))] text-[var(--fg)]'
                     : 'text-[var(--fg)]/80 hover:bg-[color-mix(in_oklab,var(--primary)_10%,var(--surface))]',
+                  isCollapsed ? 'justify-center' : '',
                 ].join(' ')
               }
               onClick={onCloseMobile}
             >
-              <it.icon className={isCollapsed ? 'mx-auto' : ''} />
+              <it.icon />
               {isCollapsed ? null : <span className="truncate">{it.label}</span>}
             </NavLink>
           ))}
@@ -124,9 +124,13 @@ export const Sidebar = ({
         <div className="border-t border-[var(--border)] p-2">
           <button
             onClick={toggle}
-            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+            aria-label={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
+            className="group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-[var(--fg)]/80 transition-colors hover:bg-[color-mix(in_oklab,var(--primary)_10%,var(--surface))]"
           >
-            {isCollapsed ? 'Expandir' : 'Recolher'}
+            <ChevronsLeft
+              className={`h-5 w-5 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
+            />
+            {isCollapsed ? null : <span className="truncate">Recolher</span>}
           </button>
         </div>
       </aside>
