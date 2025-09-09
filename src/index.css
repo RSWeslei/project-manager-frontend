@@ -1,0 +1,169 @@
+/* src/index.css */
+@import 'tailwindcss';
+
+:root {
+  --bg: #f7f7fb;
+  --fg: #0b0b0c;
+  --surface: #ffffff;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --radius: 14px;
+  --shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+  --hero-from: color-mix(in oklab, var(--primary) 6%, #ffffff);
+  --hero-via: #ffffff;
+  --hero-to: #f7f7fb;
+}
+
+:root[data-theme='dark'] {
+  --bg: #0b0b0c;
+  --fg: #f5f5f7;
+  --surface: #121215;
+  --muted: #a3a3a3;
+  --border: #26262b;
+  --primary: #a78bfa;
+  --primary-foreground: #0b0b0c;
+  --hero-from: #141419;
+  --hero-via: #0f0f14;
+  --hero-to: #0b0b0c;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+.hero {
+  background: linear-gradient(135deg, var(--hero-from), var(--hero-via) 55%, var(--hero-to));
+}
+
+.btn {
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 1.125rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 1rem;
+  transition:
+    transform 0.05s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+  box-shadow: none;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: var(--shadow);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  box-shadow: none;
+}
+.btn-outline {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+/* Campo moderno unificado (input/select) */
+.input {
+  width: 100%;
+  height: 52px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  padding: 0 0.875rem;
+  outline: none;
+  font-size: 0.95rem;
+  line-height: 1.1;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.input::placeholder {
+  color: var(--muted);
+}
+.input:hover {
+  border-color: color-mix(in oklab, var(--primary) 12%, var(--border));
+}
+.input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 12%, transparent);
+}
+.input[aria-invalid='true'] {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px color-mix(in oklab, #ef4444 18%, transparent);
+}
+
+/* autofill consistente */
+input.input:-webkit-autofill,
+input.input:-webkit-autofill:hover,
+input.input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--fg);
+  -webkit-box-shadow: 0 0 0px 1000px var(--surface) inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.card {
+  border-radius: calc(var(--radius) + 2px);
+  border: 1px solid color-mix(in oklab, var(--border) 75%, transparent);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.text-muted {
+  color: var(--muted);
+}
+
+.toast-container {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  gap: 0.75rem;
+  z-index: 70;
+}
+.toast {
+  min-width: 280px;
+  max-width: 400px;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid color-mix(in oklab, var(--border) 75%, transparent);
+  padding: 0.875rem 1rem;
+  background: var(--surface);
+  color: var(--fg);
+  box-shadow: var(--shadow);
+  transform: translateY(-8px);
+  opacity: 0;
+  animation: toast-in 0.2s ease forwards;
+}
+.toast[data-variant='error'] {
+  border-color: color-mix(in oklab, #ef4444 45%, var(--border));
+}
+.toast[data-variant='success'] {
+  border-color: color-mix(in oklab, #22c55e 45%, var(--border));
+}
+.toast[data-variant='info'] {
+  border-color: color-mix(in oklab, #3b82f6 45%, var(--border));
+}
+@keyframes toast-in {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
