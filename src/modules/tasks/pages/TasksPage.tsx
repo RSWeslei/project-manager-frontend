@@ -126,6 +126,12 @@ const TasksPage = (): JSX.Element => {
       accessor: (t) => t.project?.name ?? '—',
       width: 220,
     },
+    {
+      id: 'assignee',
+      header: 'Responsável',
+      accessor: (t) => t.assignee?.name ?? '—',
+      width: 220,
+    },
   ] as const;
 
   return (
@@ -194,7 +200,7 @@ const TasksPage = (): JSX.Element => {
         loading={isLoading}
         striped
         stickyHeader
-        minWidth={900}
+        minWidth={1000}
         rowActions={{
           onEdit: (row) => setEditing(row),
           onDelete: (row) => setConfirmId(row.id),
