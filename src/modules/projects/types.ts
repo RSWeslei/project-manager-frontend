@@ -28,7 +28,7 @@ export type DashboardTasksPerUser = {
 export type DashboardTasksByStatus = {
   status: 'todo' | 'in_progress' | 'review' | 'done';
   count: string;
-}
+};
 
 export type DashboardData = {
   kpis: DashboardKPIs;

@@ -1,6 +1,13 @@
 import { JSX, useEffect, useMemo, useState } from 'react';
 import { NavLink } from 'react-router';
-import { LayoutDashboard, ListTodo, FolderKanban, Users, Settings, ChevronsLeft } from 'lucide-react';
+import {
+  LayoutDashboard,
+  ListTodo,
+  FolderKanban,
+  Users,
+  Settings,
+  ChevronsLeft,
+} from 'lucide-react';
 
 export type NavItem = {
   key: string;
@@ -55,12 +62,12 @@ const DEFAULT_ITEMS: NavItem[] = [
 const STORAGE_KEY = 'taskhub_sidebar_collapsed';
 
 export const Sidebar = ({
-                          items,
-                          collapsed,
-                          onToggleCollapsed,
-                          mobileOpen,
-                          onCloseMobile,
-                        }: Props): JSX.Element => {
+  items,
+  collapsed,
+  onToggleCollapsed,
+  mobileOpen,
+  onCloseMobile,
+}: Props): JSX.Element => {
   const navItems = useMemo(() => items ?? DEFAULT_ITEMS, [items]);
   const [internalCollapsed, setInternalCollapsed] = useState<boolean>(false);
 

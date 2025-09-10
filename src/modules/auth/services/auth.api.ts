@@ -1,10 +1,25 @@
 import { LoginData, User } from '@/modules/auth/types';
 import { get, post, postForm } from '@/shared/lib/http/client';
+import { registerSchema } from '@/modules/auth/schemas';
+import { z } from 'zod';
+import { paths } from '@/shared/lib/router/paths';
 
 export type LoginPayload = {
-  email: string;
-  password: string;
-  remember?: boolean;
+    email: string;
+    password: string;
+    remember?: boolean;
+};
+
+export type RegisterPayload = Omit<z.infer<typeof registerSchema>, 'confirmPassword'>;
+
+const handleFailedRefresh = (): null => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('me');
+    if (window.location.pathname !== paths.login) {
+        window.location.href = paths.login;
+    }
+    return null;
 };
 
 export const login = async (payload: LoginPayload): Promise<LoginData> => {
@@ -27,11 +42,48 @@ export const login = async (payload: LoginPayload): Promise<LoginData> => {
 };
 
 export const profile = async (): Promise<User> => {
-  return get<User>('/auth/profile');
+    return get<User>('/auth/profile');
+};
+
+export const register = async (payload: RegisterPayload): Promise<User> => {
+    return post<RegisterPayload, User>('/auth/register', payload);
 };
 
 export const uploadUserPhoto = async (file: File): Promise<User> => {
-  const formData = new FormData();
-  formData.append('file', file);
-  return postForm<User>('/users/photo', formData);
+    const formData = new FormData();
+    formData.append('file', file);
+    return postForm<User>('/users/photo', formData);
+};
+
+export const refreshAccessToken = async (): Promise<string | null> => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+        return null;
+    }
+
+    try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refreshToken }),
+        });
+
+        if (!res.ok) {
+            return handleFailedRefresh();
+        }
+
+        const parsed = await res.json();
+        const newAccessToken = parsed.data?.accessToken;
+
+        if (!newAccessToken) {
+            return handleFailedRefresh();
+        }
+
+        localStorage.setItem('accessToken', newAccessToken);
+        return newAccessToken;
+    } catch {
+        return handleFailedRefresh();
+    }
 };

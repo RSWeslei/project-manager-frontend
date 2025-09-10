@@ -1,0 +1,6 @@
+# Diga ao Git para lidar com os arquivos de texto automaticamente
+# e padronizar as quebras de linha para LF no repositório.
+* text=auto eol=lf
+
+# Deixe arquivos específicos do Windows com quebras de linha CRLF.
+*.{cmd,bat,ps1} text eol=crlf

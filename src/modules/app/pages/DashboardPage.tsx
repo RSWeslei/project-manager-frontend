@@ -1,6 +1,28 @@
 import { useState, useMemo } from 'react';
-import { Card, Grid, Group, NativeSelect, Stack, Text, Title, Table, Skeleton } from '@mantine/core';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import {
+  Card,
+  Grid,
+  Group,
+  NativeSelect,
+  Stack,
+  Text,
+  Title,
+  Table,
+  Skeleton,
+} from '@mantine/core';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 import { useProjectsList, useDashboardData } from '@/modules/projects/hooks/useProjects';
 import { useTasksList } from '@/modules/tasks/hooks/useTasks';
 import { TaskStatusBadge } from '@/shared/components/data/StatusBadge';
@@ -28,15 +50,17 @@ const DashboardPage = () => {
 
   const selectedProjectId = projectId ? Number(projectId) : null;
 
-  const { data: dashboardData, isLoading: isLoadingDashboard } = useDashboardData(selectedProjectId);
+  const { data: dashboardData, isLoading: isLoadingDashboard } =
+    useDashboardData(selectedProjectId);
 
   const { data: recentTasks, isLoading: isLoadingTasks } = useTasksList({
     projectId: selectedProjectId ?? undefined,
   });
 
   const kpis = useMemo(
-    () => dashboardData?.kpis || { totalTasks: 0, completedTasks: 0, pendingTasks: 0, overdueTasks: 0 },
-    [dashboardData]
+    () =>
+      dashboardData?.kpis || { totalTasks: 0, completedTasks: 0, pendingTasks: 0, overdueTasks: 0 },
+    [dashboardData],
   );
 
   const tasksPerUser = useMemo(() => dashboardData?.tasksPerUser || [], [dashboardData]);
@@ -61,7 +85,10 @@ const DashboardPage = () => {
         <NativeSelect
           value={projectId}
           onChange={(e) => setProjectId(e.currentTarget.value)}
-          data={[{ value: '', label: 'Todos os projetos' }, ...(projects || []).map(p => ({ value: String(p.id), label: p.name }))]}
+          data={[
+            { value: '', label: 'Todos os projetos' },
+            ...(projects || []).map((p) => ({ value: String(p.id), label: p.name })),
+          ]}
           disabled={isLoadingProjects}
         />
       </Group>
@@ -72,12 +99,16 @@ const DashboardPage = () => {
           { label: 'Concluídas', value: kpis.completedTasks, color: 'teal' },
           { label: 'Pendentes', value: kpis.pendingTasks, color: 'blue' },
           { label: 'Atrasadas', value: kpis.overdueTasks, color: 'red' },
-        ].map(kpi => (
+        ].map((kpi) => (
           <Grid.Col key={kpi.label} span={{ base: 12, sm: 6, lg: 3 }}>
             <Card withBorder radius="md" p="md">
-              <Text size="sm" c="dimmed">{kpi.label}</Text>
+              <Text size="sm" c="dimmed">
+                {kpi.label}
+              </Text>
               <Skeleton visible={isLoadingDashboard} width="50%" mt={8}>
-                <Title order={2} mt={4} c={kpi.color}>{kpi.value}</Title>
+                <Title order={2} mt={4} c={kpi.color}>
+                  {kpi.value}
+                </Title>
               </Skeleton>
             </Card>
           </Grid.Col>
@@ -87,17 +118,30 @@ const DashboardPage = () => {
       <Grid>
         <Grid.Col span={{ base: 12, lg: 8 }}>
           <Card withBorder radius="md" p="lg" h="100%">
-            <Title order={4} mb="lg">Tarefas por Colaborador</Title>
+            <Title order={4} mb="lg">
+              Tarefas por Colaborador
+            </Title>
             <Skeleton visible={isLoadingDashboard} height={300}>
               {!isLoadingDashboard && tasksPerUser.length > 0 ? (
                 <ResponsiveContainer key={barsKey} width="100%" height={300}>
-                  <BarChart data={tasksPerUser} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                  <BarChart
+                    data={tasksPerUser}
+                    margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+                  >
                     <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
-                    <XAxis dataKey="user" fontSize={12} tick={{ fill: 'var(--mantine-color-dimmed)' }} />
+                    <XAxis
+                      dataKey="user"
+                      fontSize={12}
+                      tick={{ fill: 'var(--mantine-color-dimmed)' }}
+                    />
                     <YAxis tick={{ fill: 'var(--mantine-color-dimmed)' }} />
                     <Tooltip
                       wrapperStyle={{ outline: 'none' }}
-                      contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--fg)' }}
+                      contentStyle={{
+                        background: 'var(--surface)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--fg)',
+                      }}
                       labelStyle={{ color: 'var(--mantine-color-dimmed)' }}
                       itemStyle={{ color: 'var(--fg)' }}
                     />
@@ -106,7 +150,11 @@ const DashboardPage = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                !isLoadingDashboard && <Text c="dimmed" ta="center">Sem dados</Text>
+                !isLoadingDashboard && (
+                  <Text c="dimmed" ta="center">
+                    Sem dados
+                  </Text>
+                )
               )}
             </Skeleton>
           </Card>
@@ -114,19 +162,33 @@ const DashboardPage = () => {
 
         <Grid.Col span={{ base: 12, lg: 4 }}>
           <Card withBorder radius="md" p="lg" h="100%">
-            <Title order={4} mb="lg" ta="center">Tarefas por Status</Title>
+            <Title order={4} mb="lg" ta="center">
+              Tarefas por Status
+            </Title>
             <Skeleton visible={isLoadingDashboard} height={300}>
               {!isLoadingDashboard && tasksByStatus.length > 0 ? (
                 <ResponsiveContainer key={pieKey} width="100%" height={300}>
                   <PieChart>
-                    <Pie data={tasksByStatus} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                    <Pie
+                      data={tasksByStatus}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label
+                    >
                       {tasksByStatus.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                       ))}
                     </Pie>
                     <Tooltip
                       wrapperStyle={{ outline: 'none' }}
-                      contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--fg)' }}
+                      contentStyle={{
+                        background: 'var(--surface)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--fg)',
+                      }}
                       labelStyle={{ color: 'var(--mantine-color-dimmed)' }}
                       itemStyle={{ color: 'var(--fg)' }}
                     />
@@ -134,7 +196,11 @@ const DashboardPage = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                !isLoadingDashboard && <Text c="dimmed" ta="center">Sem dados</Text>
+                !isLoadingDashboard && (
+                  <Text c="dimmed" ta="center">
+                    Sem dados
+                  </Text>
+                )
               )}
             </Skeleton>
           </Card>
@@ -142,7 +208,9 @@ const DashboardPage = () => {
       </Grid>
 
       <Card withBorder radius="md" p="0">
-        <Title order={4} m="lg" mb={0}>Tarefas Recentes</Title>
+        <Title order={4} m="lg" mb={0}>
+          Tarefas Recentes
+        </Title>
         <Table verticalSpacing="sm" striped highlightOnHover>
           <Table.Thead>
             <Table.Tr>
@@ -152,21 +220,29 @@ const DashboardPage = () => {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {isLoadingTasks ? (
-              Array.from({ length: 5 }).map((_, index) => (
-                <Table.Tr key={index}>
-                  <Table.Td><Skeleton height={8} radius="xl" /></Table.Td>
-                  <Table.Td><Skeleton height={8} radius="xl" /></Table.Td>
-                  <Table.Td><Skeleton height={8} radius="xl" width="70%" /></Table.Td>
-                </Table.Tr>
-              ))
-            ) : (recentTasks || []).map((task: Task) => (
-              <Table.Tr key={task.id}>
-                <Table.Td>{task.title}</Table.Td>
-                <Table.Td>{task.project?.name || 'N/A'}</Table.Td>
-                <Table.Td><TaskStatusBadge status={task.status} /></Table.Td>
-              </Table.Tr>
-            ))}
+            {isLoadingTasks
+              ? Array.from({ length: 5 }).map((_, index) => (
+                  <Table.Tr key={index}>
+                    <Table.Td>
+                      <Skeleton height={8} radius="xl" />
+                    </Table.Td>
+                    <Table.Td>
+                      <Skeleton height={8} radius="xl" />
+                    </Table.Td>
+                    <Table.Td>
+                      <Skeleton height={8} radius="xl" width="70%" />
+                    </Table.Td>
+                  </Table.Tr>
+                ))
+              : (recentTasks || []).map((task: Task) => (
+                  <Table.Tr key={task.id}>
+                    <Table.Td>{task.title}</Table.Td>
+                    <Table.Td>{task.project?.name || 'N/A'}</Table.Td>
+                    <Table.Td>
+                      <TaskStatusBadge status={task.status} />
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
           </Table.Tbody>
         </Table>
       </Card>

@@ -1,9 +1,20 @@
 import { JSX, useRef } from 'react';
-import { Menu, MenuDropdown, MenuItem, MenuTarget, Avatar, Text, UnstyledButton, Group } from '@mantine/core';
-import { LogOut, UserCircle, Upload } from 'lucide-react';
+import {
+  Menu,
+  MenuDropdown,
+  MenuItem,
+  MenuTarget,
+  Avatar,
+  Text,
+  UnstyledButton,
+  Group,
+} from '@mantine/core';
+import { LogOut, Upload } from 'lucide-react';
 import { useToast } from '@/shared/components/ui/Toast';
 import { useProfile, useUpdateMyPhoto } from '@/modules/auth/hooks/useMe';
 import * as React from 'react';
+import { useNavigate } from 'react-router';
+import { paths } from '@/shared/lib/router/paths';
 
 const getInitials = (name: string): string => {
   const parts = name.trim().split(/\s+/).slice(0, 2);
@@ -15,6 +26,7 @@ export const UserMenu = (): JSX.Element => {
   const photoMutation = useUpdateMyPhoto();
   const fileRef = useRef<HTMLInputElement | null>(null);
   const { push } = useToast();
+  const navigate = useNavigate();
 
   const openFile = () => {
     fileRef.current?.click();
@@ -35,6 +47,13 @@ export const UserMenu = (): JSX.Element => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('me');
+    navigate(paths.login);
+  };
+
   const name = me?.name ?? '';
   const email = me?.email ?? '';
   const photoUrl = me?.photoUrl ?? null;
@@ -49,17 +68,18 @@ export const UserMenu = (): JSX.Element => {
                 {getInitials(name || email)}
               </Avatar>
               <div className="hidden text-left md:block">
-                <Text size="sm" fw={500}>{name}</Text>
-                <Text size="xs" c="dimmed">{email}</Text>
+                <Text size="sm" fw={500}>
+                  {name}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {email}
+                </Text>
               </div>
             </Group>
           </UnstyledButton>
         </MenuTarget>
 
         <MenuDropdown>
-          <MenuItem leftSection={<UserCircle className="h-4 w-4" />}>
-            Meu Perfil
-          </MenuItem>
           <MenuItem
             leftSection={<Upload className="h-4 w-4" />}
             onClick={openFile}
@@ -67,7 +87,7 @@ export const UserMenu = (): JSX.Element => {
           >
             {photoMutation.isPending ? 'Enviando...' : 'Trocar Foto'}
           </MenuItem>
-          <MenuItem color="red" leftSection={<LogOut className="h-4 w-4" />}>
+          <MenuItem color="red" leftSection={<LogOut className="h-4 w-4" />} onClick={handleLogout}>
             Sair
           </MenuItem>
         </MenuDropdown>

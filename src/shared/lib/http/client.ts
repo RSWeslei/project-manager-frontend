@@ -1,4 +1,5 @@
 import { isApiEnvelope } from '@/shared/lib/http/types';
+import { refreshAccessToken } from '@/modules/auth/services/auth.api';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -23,10 +24,14 @@ const parse = async <T>(res: Response): Promise<T> => {
   return parsed as T;
 };
 
-export const request = async <TBody extends Record<string, unknown> | FormData | undefined, TResponse>(
+export const request = async <
+  TBody extends Record<string, unknown> | FormData | undefined,
+  TResponse,
+>(
   method: HttpMethod,
   path: string,
   body?: TBody,
+  isRetry = false,
 ): Promise<TResponse> => {
   const url = `${baseUrl ?? ''}${path}`;
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
@@ -34,8 +39,7 @@ export const request = async <TBody extends Record<string, unknown> | FormData |
   const headers: HeadersInit = {};
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  let bodyInit: BodyInit | undefined = undefined;
-
+  let bodyInit: BodyInit | undefined;
   if (body instanceof FormData) {
     bodyInit = body;
   } else if (body) {
@@ -43,12 +47,15 @@ export const request = async <TBody extends Record<string, unknown> | FormData |
     bodyInit = JSON.stringify(body);
   }
 
-  const init: RequestInit = {
-    method,
-    headers,
-    body: bodyInit,
-  };
-  const res = await fetch(url, init);
+  const res = await fetch(url, { method, headers, body: bodyInit });
+
+  if (res.status === 401 && !isRetry) {
+    const newAccessToken = await refreshAccessToken();
+    if (newAccessToken) {
+      return request(method, path, body, true);
+    }
+  }
+
   return parse<TResponse>(res);
 };
 
@@ -60,10 +67,8 @@ export const post = async <TBody extends Record<string, unknown>, TResponse>(
   body: TBody,
 ): Promise<TResponse> => request<TBody, TResponse>('POST', path, body);
 
-export const postForm = async <TResponse>(
-  path: string,
-  body: FormData,
-): Promise<TResponse> => request<FormData, TResponse>('POST', path, body);
+export const postForm = async <TResponse>(path: string, body: FormData): Promise<TResponse> =>
+  request<FormData, TResponse>('POST', path, body);
 
 export const patch = async <TBody extends Record<string, unknown>, TResponse>(
   path: string,
