@@ -33,7 +33,7 @@ const AuthLayout = (): JSX.Element => {
                   Task Hub
                 </span>
                 <p className="text-muted max-w-sm">
-                  Acompanhe projetos, tarefas e equipes em um só lugar.
+                  Acompanhe projetos e tarefas em um só lugar.
                 </p>
               </div>
             </div>

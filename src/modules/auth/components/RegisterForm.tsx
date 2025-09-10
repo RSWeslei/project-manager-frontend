@@ -13,9 +13,10 @@ import { useRegister } from '../hooks/useLogin';
 type RegisterInput = z.infer<typeof registerSchema>;
 
 const RegisterForm = (): JSX.Element => {
-  const form = useForm<RegisterInput>({ resolver: zodResolver(registerSchema), mode: 'onSubmit' });
-  const navigate = useNavigate();
   const { push } = useToast();
+
+  const navigate = useNavigate();
+  const form = useForm<RegisterInput>({ resolver: zodResolver(registerSchema), mode: 'onSubmit' });
   const registerMutation = useRegister();
 
   const onSubmit = (data: RegisterInput) => {
@@ -61,6 +62,7 @@ const RegisterForm = (): JSX.Element => {
             { value: '', label: 'Selecione seu nível' },
             { value: 'developer', label: 'Desenvolvedor' },
             { value: 'manager', label: 'Gerente' },
+            { value: 'admin', label: 'Administrador' },
           ]}
           error={form.formState.errors.role?.message}
           {...form.register('role')}

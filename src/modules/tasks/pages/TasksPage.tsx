@@ -1,20 +1,9 @@
 import { JSX, useEffect, useMemo, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import {
-  ActionIcon,
-  Button,
-  Card,
-  Group,
-  Modal,
-  NativeSelect,
-  ScrollArea,
-  Stack,
-  Text,
-  TextInput,
-} from '@mantine/core';
-import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
+import { Button, Group, Modal, NativeSelect, Stack, Text, TextInput, Tooltip } from '@mantine/core';
+import { Plus, Search } from 'lucide-react';
 import { useToast } from '@/shared/components/ui/Toast';
-import { Task } from '@/modules/tasks/types';
+import { Task, TaskPriority, TaskStatus } from '@/modules/tasks/types';
 import {
   useCreateTask,
   useDeleteTask,
@@ -26,6 +15,9 @@ import { TaskFormModal } from '@/modules/tasks/components/TaskFormModal';
 import { TaskPriorityBadge, TaskStatusBadge } from '@/shared/components/data/StatusBadge';
 import { listProjects } from '@/modules/projects/services/projects.api';
 import { Project } from '@/modules/projects/types';
+import { Column, DataTable } from '@/shared/components/data/DataTable';
+import { usePermissions } from '@/modules/auth/hooks/usePermissions';
+import { formatDateBR } from '@/shared/lib/date';
 
 const TasksPage = (): JSX.Element => {
   const [q, setQ] = useState('');
@@ -57,6 +49,8 @@ const TasksPage = (): JSX.Element => {
   const createMut = useCreateTask();
   const updateMut = useUpdateTask(editing?.id ?? 0);
   const deleteMut = useDeleteTask();
+
+  const { canCreate } = usePermissions();
 
   useEffect(() => {
     listProjects()
@@ -97,6 +91,42 @@ const TasksPage = (): JSX.Element => {
       push({ title: 'Erro', description: msg, variant: 'error' });
     }
   };
+
+  const columns: ReadonlyArray<Column<Task>> = [
+    {
+      id: 'title',
+      header: 'Título',
+      accessor: 'title',
+      className: 'min-w-56',
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      accessor: (t) => t.status,
+      cell: (value) => <TaskStatusBadge status={value as TaskStatus} />,
+      width: 140,
+    },
+    {
+      id: 'priority',
+      header: 'Prioridade',
+      accessor: (t) => t.priority,
+      cell: (value) => <TaskPriorityBadge priority={value as TaskPriority} />,
+      width: 140,
+    },
+    {
+      id: 'due',
+      header: 'Vencimento',
+      accessor: (t) => t.dueDate,
+      cell: (value) => (value ? formatDateBR(value as string) : '—'),
+      width: 140,
+    },
+    {
+      id: 'project',
+      header: 'Projeto',
+      accessor: (t) => t.project?.name ?? '—',
+      width: 220,
+    },
+  ] as const;
 
   return (
     <Stack gap="lg">
@@ -145,94 +175,39 @@ const TasksPage = (): JSX.Element => {
           ]}
           className="w-full sm:w-60"
         />
-        <Button onClick={() => setOpen(true)} leftSection={<Plus className="h-5 w-5" />}>
-          Nova tarefa
-        </Button>
+
+        <Tooltip label="Sem permissão" disabled={canCreate} withArrow>
+          <Button
+            onClick={() => canCreate && setOpen(true)}
+            leftSection={<Plus className="h-5 w-5" />}
+            disabled={!canCreate}
+          >
+            Nova tarefa
+          </Button>
+        </Tooltip>
       </Group>
 
-      <Card withBorder radius="lg" p="0">
-        <ScrollArea type="auto">
-          <table className="w-full border-separate border-spacing-0">
-            <thead>
-              <tr className="text-muted text-left text-sm">
-                <th className="border-b border-[var(--border)] px-4 py-3 font-medium">Título</th>
-                <th className="border-b border-[var(--border)] px-4 py-3 font-medium">Status</th>
-                <th className="border-b border-[var(--border)] px-4 py-3 font-medium">
-                  Prioridade
-                </th>
-                <th className="border-b border-[var(--border)] px-4 py-3 font-medium">
-                  Vencimento
-                </th>
-                <th className="border-b border-[var(--border)] px-4 py-3 font-medium">Projeto</th>
-                <th className="border-b border-[var(--border)] px-4 py-3 font-medium">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="text-muted px-4 py-6 text-sm">
-                    carregando...
-                  </td>
-                </tr>
-              ) : rows.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-10">
-                    <Stack align="center" gap="xs">
-                      <Text c="dimmed" size="sm">
-                        Sem resultados
-                      </Text>
-                      <Button
-                        variant="outline"
-                        onClick={() => setOpen(true)}
-                        leftSection={<Plus className="h-4 w-4" />}
-                      >
-                        Criar primeira tarefa
-                      </Button>
-                    </Stack>
-                  </td>
-                </tr>
-              ) : (
-                rows.map((t) => (
-                  <tr key={t.id} className="text-sm">
-                    <td className="border-b border-[var(--border)] px-4 py-3">{t.title}</td>
-                    <td className="border-b border-[var(--border)] px-4 py-3">
-                      <TaskStatusBadge status={t.status} />
-                    </td>
-                    <td className="border-b border-[var(--border)] px-4 py-3">
-                      <TaskPriorityBadge priority={t.priority} />
-                    </td>
-                    <td className="border-b border-[var(--border)] px-4 py-3">
-                      {t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : '—'}
-                    </td>
-                    <td className="border-b border-[var(--border)] px-4 py-3">
-                      {t.project?.name ?? '—'}
-                    </td>
-                    <td className="border-b border-[var(--border)] px-4 py-3">
-                      <Group gap="xs">
-                        <ActionIcon
-                          variant="light"
-                          aria-label="Editar"
-                          onClick={() => setEditing(t)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </ActionIcon>
-                        <ActionIcon
-                          variant="light"
-                          color="red"
-                          aria-label="Remover"
-                          onClick={() => setConfirmId(t.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </ActionIcon>
-                      </Group>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </ScrollArea>
-      </Card>
+      <DataTable<Task>
+        data={rows}
+        columns={columns}
+        rowKey={(t) => t.id}
+        loading={isLoading}
+        striped
+        stickyHeader
+        minWidth={900}
+        rowActions={{
+          onEdit: (row) => setEditing(row),
+          onDelete: (row) => setConfirmId(row.id),
+          width: 140,
+        }}
+        empty={
+          <Stack align="center" gap="xs">
+            <Text c="dimmed" size="sm">
+              Sem resultados
+            </Text>
+          </Stack>
+        }
+      />
 
       <TaskFormModal
         open={open}

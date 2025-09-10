@@ -7,6 +7,7 @@ import { MantineProvider } from '@mantine/core';
 import { theme, cssVarsResolver } from '@/shared/styles/mantineTheme';
 import '@mantine/core/styles.css';
 import './index.css';
+import { AuthProvider } from '@/modules/auth/context/AuthContext';
 
 const rootEl = document.getElementById('root');
 if (!rootEl) throw new Error('root não encontrado');
@@ -17,7 +18,9 @@ createRoot(rootEl).render(
   <MantineProvider theme={theme} cssVariablesResolver={cssVarsResolver} defaultColorScheme="dark">
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        <RouterProvider router={router} />
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
       </ToastProvider>
     </QueryClientProvider>
   </MantineProvider>,

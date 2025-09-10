@@ -5,25 +5,17 @@ import {
   useUpdateProject,
   useDeleteProject,
 } from '@/modules/projects/hooks/useProjects';
-import { Project } from '@/modules/projects/types';
+import { Project, ProjectStatus } from '@/modules/projects/types';
 import { ProjectFormModal } from '@/modules/projects/components/ProjectFormModal';
 import { useToast } from '@/shared/components/ui/Toast';
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import {
-  ActionIcon,
-  Badge,
-  Button,
-  Card,
-  Group,
-  Modal,
-  NativeSelect,
-  ScrollArea,
-  Stack,
-  Text,
-  TextInput,
-} from '@mantine/core';
+import { Plus, Search } from 'lucide-react';
+import { Button, Group, Modal, NativeSelect, Stack, Text, TextInput, Tooltip } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import { ProjectInput } from '@/modules/projects/schemas';
+import { Column, DataTable } from '@/shared/components/data/DataTable';
+import { usePermissions } from '@/modules/auth/hooks/usePermissions';
+import { ProjectStatusBadge } from '@/shared/components/data/StatusBadge';
+import { formatDateBR } from '@/shared/lib/date';
 
 const ProjectsPage = (): JSX.Element => {
   const [q, setQ] = useState('');
@@ -35,6 +27,7 @@ const ProjectsPage = (): JSX.Element => {
     [debouncedQ, status],
   );
   const { data, isLoading } = useProjectsList(listParams);
+  const rows = useMemo(() => data ?? [], [data]);
 
   const { push } = useToast();
 
@@ -46,7 +39,7 @@ const ProjectsPage = (): JSX.Element => {
   const updateMut = useUpdateProject(editing?.id ?? 0);
   const deleteMut = useDeleteProject();
 
-  const rows = useMemo(() => data ?? [], [data]);
+  const { canCreate } = usePermissions();
 
   const onCreate = async (payload: ProjectInput) => {
     try {
@@ -82,12 +75,35 @@ const ProjectsPage = (): JSX.Element => {
     }
   };
 
-  const statusColor: Record<Project['status'], string> = {
-    planned: 'gray',
-    active: 'green',
-    completed: 'blue',
-    cancelled: 'red',
-  };
+  const columns: ReadonlyArray<Column<Project>> = [
+    {
+      id: 'name',
+      header: 'Nome',
+      accessor: 'name',
+      className: 'min-w-56',
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      accessor: (p) => p.status,
+      cell: (value) => <ProjectStatusBadge status={value as ProjectStatus} />,
+      width: 140,
+    },
+    {
+      id: 'start',
+      header: 'Início',
+      accessor: (p) => p.startDate,
+      cell: (value) => (value ? formatDateBR(value as string) : '—'),
+      width: 120,
+    },
+    {
+      id: 'end',
+      header: 'Fim',
+      accessor: (p) => p.endDate,
+      cell: (value) => (value ? formatDateBR(value as string) : '—'),
+      width: 120,
+    },
+  ] as const;
 
   return (
     <Stack gap="lg">
@@ -100,6 +116,7 @@ const ProjectsPage = (): JSX.Element => {
           leftSection={<Search className="h-5 w-5" />}
           className="min-w-64 flex-1"
         />
+
         <NativeSelect
           label="Status"
           value={status}
@@ -113,88 +130,38 @@ const ProjectsPage = (): JSX.Element => {
           ]}
           className="w-full sm:w-60"
         />
-        <Button onClick={() => setOpen(true)} leftSection={<Plus className="h-5 w-5" />}>
-          Novo projeto
-        </Button>
+
+        <Tooltip label="Sem permissão" disabled={canCreate} withArrow>
+          <Button
+            onClick={() => canCreate && setOpen(true)}
+            leftSection={<Plus className="h-5 w-5" />}
+            disabled={!canCreate}
+          >
+            Novo projeto
+          </Button>
+        </Tooltip>
       </Group>
 
-      <Card withBorder radius="lg" p="0">
-        <ScrollArea type="auto">
-          <table className="w-full border-separate border-spacing-0">
-            <thead>
-              <tr className="text-muted text-left text-sm">
-                <th className="border-b border-[var(--border)] px-4 py-3 font-medium">Nome</th>
-                <th className="border-b border-[var(--border)] px-4 py-3 font-medium">Status</th>
-                <th className="border-b border-[var(--border)] px-4 py-3 font-medium">Início</th>
-                <th className="border-b border-[var(--border)] px-4 py-3 font-medium">Fim</th>
-                <th className="border-b border-[var(--border)] px-4 py-3 font-medium">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="text-muted px-4 py-6 text-sm">
-                    carregando...
-                  </td>
-                </tr>
-              ) : rows.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-10">
-                    <Stack align="center" gap="xs">
-                      <Text c="dimmed" size="sm">
-                        Sem resultados
-                      </Text>
-                      <Button
-                        variant="outline"
-                        onClick={() => setOpen(true)}
-                        leftSection={<Plus className="h-4 w-4" />}
-                      >
-                        Criar primeiro projeto
-                      </Button>
-                    </Stack>
-                  </td>
-                </tr>
-              ) : (
-                rows.map((p) => (
-                  <tr key={p.id} className="text-sm">
-                    <td className="border-b border-[var(--border)] px-4 py-3">{p.name}</td>
-                    <td className="border-b border-[var(--border)] px-4 py-3">
-                      <Badge color={statusColor[p.status]} variant="light">
-                        {p.status}
-                      </Badge>
-                    </td>
-                    <td className="border-b border-[var(--border)] px-4 py-3">
-                      {p.startDate ? new Date(p.startDate).toISOString().slice(0, 10) : '—'}
-                    </td>
-                    <td className="border-b border-[var(--border)] px-4 py-3">
-                      {p.endDate ? new Date(p.endDate).toISOString().slice(0, 10) : '—'}
-                    </td>
-                    <td className="border-b border-[var(--border)] px-4 py-3">
-                      <Group gap="xs">
-                        <ActionIcon
-                          variant="light"
-                          aria-label="Editar"
-                          onClick={() => setEditing(p)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </ActionIcon>
-                        <ActionIcon
-                          variant="light"
-                          color="red"
-                          aria-label="Remover"
-                          onClick={() => setConfirmId(p.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </ActionIcon>
-                      </Group>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </ScrollArea>
-      </Card>
+      <DataTable<Project>
+        data={rows}
+        columns={columns}
+        rowKey={(p) => p.id}
+        loading={isLoading}
+        striped
+        minWidth={880}
+        rowActions={{
+          onEdit: (row) => setEditing(row),
+          onDelete: (row) => setConfirmId(row.id),
+          width: 140,
+        }}
+        empty={
+          <Stack align="center" gap="xs">
+            <Text c="dimmed" size="sm">
+              Sem resultados
+            </Text>
+          </Stack>
+        }
+      />
 
       <ProjectFormModal
         open={open}

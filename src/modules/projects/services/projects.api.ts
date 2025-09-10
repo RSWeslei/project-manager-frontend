@@ -2,7 +2,7 @@ import { get, post, patch, del } from '@/shared/lib/http/client';
 import { qs } from '@/shared/lib/http/query';
 import { Project, DashboardData } from '@/modules/projects/types';
 import { ProjectInput } from '@/modules/projects/schemas';
-import {User} from '@/modules/auth/types'
+import { User } from '@/modules/auth/types';
 
 export const listProjects = async (params?: {
   status?: string;
@@ -17,7 +17,7 @@ export const createProject = async (payload: ProjectInput): Promise<Project> => 
 };
 
 export const listUsers = async (): Promise<User[]> => {
-    return get<User[]>('/users');
+  return get<User[]>('/users');
 };
 
 export const updateProject = async (id: number, payload: ProjectInput): Promise<Project> => {
