@@ -45,18 +45,6 @@ const DEFAULT_ITEMS: NavItem[] = [
     to: '/dashboard/tasks',
     icon: (p) => <ListTodo className={`h-5 w-5 ${p.className ?? ''}`} />,
   },
-  {
-    key: 'people',
-    label: 'Equipes',
-    to: '/dashboard/people',
-    icon: (p) => <Users className={`h-5 w-5 ${p.className ?? ''}`} />,
-  },
-  {
-    key: 'settings',
-    label: 'Configurações',
-    to: '/dashboard/settings',
-    icon: (p) => <Settings className={`h-5 w-5 ${p.className ?? ''}`} />,
-  },
 ];
 
 const STORAGE_KEY = 'taskhub_sidebar_collapsed';

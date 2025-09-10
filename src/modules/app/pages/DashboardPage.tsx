@@ -211,40 +211,52 @@ const DashboardPage = () => {
         <Title order={4} m="lg" mb={0}>
           Tarefas Recentes
         </Title>
-        <Table verticalSpacing="sm" striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Tarefa</Table.Th>
-              <Table.Th>Projeto</Table.Th>
-              <Table.Th>Status</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {isLoadingTasks
-              ? Array.from({ length: 5 }).map((_, index) => (
-                  <Table.Tr key={index}>
-                    <Table.Td>
-                      <Skeleton height={8} radius="xl" />
-                    </Table.Td>
-                    <Table.Td>
-                      <Skeleton height={8} radius="xl" />
-                    </Table.Td>
-                    <Table.Td>
-                      <Skeleton height={8} radius="xl" width="70%" />
-                    </Table.Td>
-                  </Table.Tr>
-                ))
-              : (recentTasks || []).map((task: Task) => (
-                  <Table.Tr key={task.id}>
-                    <Table.Td>{task.title}</Table.Td>
-                    <Table.Td>{task.project?.name || 'N/A'}</Table.Td>
-                    <Table.Td>
-                      <TaskStatusBadge status={task.status} />
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-          </Table.Tbody>
-        </Table>
+        <Table
+  verticalSpacing="sm"
+  striped
+  highlightOnHover
+  style={{
+    ['--table-striped-color']: 'color-mix(in oklab, var(--border) 24%, var(--surface))',
+    ['--table-hover-color']: 'color-mix(in oklab, var(--border) 36%, var(--surface))',
+    ['--table-border-color']: 'var(--border)',
+    background: 'var(--surface)',
+    color: 'var(--fg)',
+  }}
+>
+  <Table.Thead>
+    <Table.Tr>
+      <Table.Th>Tarefa</Table.Th>
+      <Table.Th>Projeto</Table.Th>
+      <Table.Th>Status</Table.Th>
+    </Table.Tr>
+  </Table.Thead>
+  <Table.Tbody>
+    {isLoadingTasks
+      ? Array.from({ length: 5 }).map((_, index) => (
+          <Table.Tr key={index}>
+            <Table.Td>
+              <Skeleton height={8} radius="xl" />
+            </Table.Td>
+            <Table.Td>
+              <Skeleton height={8} radius="xl" />
+            </Table.Td>
+            <Table.Td>
+              <Skeleton height={8} radius="xl" width="70%" />
+            </Table.Td>
+          </Table.Tr>
+        ))
+      : (recentTasks || []).map((task: Task) => (
+          <Table.Tr key={task.id}>
+            <Table.Td>{task.title}</Table.Td>
+            <Table.Td>{task.project?.name || 'N/A'}</Table.Td>
+            <Table.Td>
+              <TaskStatusBadge status={task.status} />
+            </Table.Td>
+          </Table.Tr>
+        ))}
+  </Table.Tbody>
+</Table>
+
       </Card>
     </Stack>
   );
