@@ -1,14 +1,14 @@
 import { JSX, useMemo, useState } from 'react';
 import {
-  useProjectsList,
   useCreateProject,
-  useUpdateProject,
   useDeleteProject,
+  useProjectsList,
+  useUpdateProject,
 } from '@/modules/projects/hooks/useProjects';
 import { Project, ProjectStatus } from '@/modules/projects/types';
 import { ProjectFormModal } from '@/modules/projects/components/ProjectFormModal';
 import { useToast } from '@/shared/components/ui/Toast';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Users as UsersIcon } from 'lucide-react';
 import { Button, Group, Modal, NativeSelect, Stack, Text, TextInput, Tooltip } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import { ProjectInput } from '@/modules/projects/schemas';
@@ -16,6 +16,8 @@ import { Column, DataTable } from '@/shared/components/data/DataTable';
 import { usePermissions } from '@/modules/auth/hooks/usePermissions';
 import { ProjectStatusBadge } from '@/shared/components/data/StatusBadge';
 import { formatDateBR } from '@/shared/lib/date';
+import { ProjectMembersDrawer } from '@/modules/projects/components/ProjectMembersDrawer';
+import { searchUsers } from '@/modules/projects/services/users.api';
 
 const ProjectsPage = (): JSX.Element => {
   const [q, setQ] = useState('');
@@ -34,6 +36,10 @@ const ProjectsPage = (): JSX.Element => {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
+
+  // Drawer de membros
+  const [openMembers, setOpenMembers] = useState(false);
+  const [membersProject, setMembersProject] = useState<Project | null>(null);
 
   const createMut = useCreateProject();
   const updateMut = useUpdateProject(editing?.id ?? 0);
@@ -76,12 +82,7 @@ const ProjectsPage = (): JSX.Element => {
   };
 
   const columns: ReadonlyArray<Column<Project>> = [
-    {
-      id: 'name',
-      header: 'Nome',
-      accessor: 'name',
-      className: 'min-w-56',
-    },
+    { id: 'name', header: 'Nome', accessor: 'name', className: 'min-w-56' },
     {
       id: 'status',
       header: 'Status',
@@ -102,6 +103,26 @@ const ProjectsPage = (): JSX.Element => {
       accessor: (p) => p.endDate,
       cell: (value) => (value ? formatDateBR(value as string) : '—'),
       width: 120,
+    },
+    // NOVA coluna: abrir Drawer de membros
+    {
+      id: 'members',
+      header: 'Membros',
+      accessor: (p) => p.id,
+      cell: (_, row) => (
+        <Button
+          variant="light"
+          size="xs"
+          leftSection={<UsersIcon className="h-4 w-4" />}
+          onClick={() => {
+            setMembersProject(row);
+            setOpenMembers(true);
+          }}
+        >
+          Gerenciar
+        </Button>
+      ),
+      width: 140,
     },
   ] as const;
 
@@ -148,7 +169,7 @@ const ProjectsPage = (): JSX.Element => {
         rowKey={(p) => p.id}
         loading={isLoading}
         striped
-        minWidth={880}
+        minWidth={980}
         rowActions={{
           onEdit: (row) => setEditing(row),
           onDelete: (row) => setConfirmId(row.id),
@@ -202,6 +223,16 @@ const ProjectsPage = (): JSX.Element => {
           </Button>
         </Group>
       </Modal>
+
+      {/* Drawer de membros (usa seu users.api.ts para buscar usuários) */}
+      <ProjectMembersDrawer
+        open={openMembers}
+        onClose={() => setOpenMembers(false)}
+        project={membersProject}
+        searchUsers={async (q) => {
+          return await searchUsers(q);
+        }}
+      />
     </Stack>
   );
 };

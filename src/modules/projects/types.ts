@@ -35,3 +35,19 @@ export type DashboardData = {
   tasksPerUser: DashboardTasksPerUser[];
   tasksByStatus: DashboardTasksByStatus[];
 };
+
+export type ProjectMemberRole = 'viewer' | 'contributor' | 'maintainer';
+
+export type ProjectMemberUser = {
+  id: number;
+  name: string;
+  email: string;
+};
+
+export type ProjectMember = {
+  id: number;
+  projectId: number;
+  userId: number;
+  role: ProjectMemberRole;
+  user?: ProjectMemberUser;
+};

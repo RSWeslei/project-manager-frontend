@@ -1,6 +1,6 @@
 import { get, post, patch, del } from '@/shared/lib/http/client';
 import { qs } from '@/shared/lib/http/query';
-import { Project, DashboardData } from '@/modules/projects/types';
+import { Project, DashboardData, ProjectMemberRole, ProjectMember } from '@/modules/projects/types';
 import { ProjectInput } from '@/modules/projects/schemas';
 import { User } from '@/modules/auth/types';
 
@@ -34,3 +34,27 @@ export const getDashboardData = async (projectId?: number | null): Promise<Dashb
   const query = qs({ projectId: projectId ?? undefined });
   return get<DashboardData>(`/projects/dashboard${query}`);
 };
+
+const PM_BASE = '/project-members';
+
+type MemberRolePayload = {
+  projectId: number;
+  userId: number;
+  role: ProjectMemberRole;
+};
+
+export function listProjectMembers(projectId: number): Promise<ProjectMember[]> {
+  return get<ProjectMember[]>(`${PM_BASE}/project?projectId=${projectId}`);
+}
+
+export function addProjectMember(payload: MemberRolePayload): Promise<ProjectMember> {
+  return post<MemberRolePayload, ProjectMember>(PM_BASE, payload);
+}
+
+export function updateProjectMemberRole(payload: MemberRolePayload): Promise<ProjectMember> {
+  return patch<MemberRolePayload, ProjectMember>(`${PM_BASE}/role`, payload);
+}
+
+export function removeProjectMember(projectId: number, userId: number): Promise<{ success: true }> {
+  return del<{ success: true }>(`${PM_BASE}?projectId=${projectId}&userId=${userId}`);
+}
