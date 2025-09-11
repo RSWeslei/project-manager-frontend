@@ -4,7 +4,7 @@ import { Moon, Sun } from 'lucide-react';
 import { ActionIcon } from '@mantine/core';
 
 export const ThemeToggle = (): JSX.Element => {
-  const [theme, setThemeState] = useState<ThemeName>('light');
+  const [theme, setThemeState] = useState<ThemeName>('dark');
 
   useEffect(() => {
     const t = getTheme();

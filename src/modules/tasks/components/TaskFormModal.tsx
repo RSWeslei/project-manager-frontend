@@ -4,7 +4,12 @@ import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Task, TaskPriority, TaskStatus } from '@/modules/tasks/types';
-import { TaskCreateInput, TaskUpdateInput, taskCreateSchema, taskUpdateSchema } from '@/modules/tasks/schemas';
+import {
+  TaskCreateInput,
+  TaskUpdateInput,
+  taskCreateSchema,
+  taskUpdateSchema,
+} from '@/modules/tasks/schemas';
 import { listProjects } from '@/modules/projects/services/projects.api';
 import { Project } from '@/modules/projects/types';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -43,26 +48,28 @@ type FormValues = {
   description?: string;
   status: TaskStatus;
   priority: TaskPriority;
-  dueDate: string;        // obrigatório no form
-  assigneeId: number;     // obrigatório no form
-  projectId: number | undefined; // obrigatório na criação
+  dueDate: string;
+  assigneeId: number;
+  projectId: number | undefined;
 };
 
 export const TaskFormModal = ({
-                                open,
-                                onClose,
-                                onCreate,
-                                onUpdate,
-                                loading,
-                                initial,
-                              }: Props): JSX.Element => {
-  // Schema base (create/update) vindo do app, estendido para exigir dueDate e assigneeId no form
+  open,
+  onClose,
+  onCreate,
+  onUpdate,
+  loading,
+  initial,
+}: Props): JSX.Element => {
   const baseSchema = useMemo(() => (initial ? taskUpdateSchema : taskCreateSchema), [initial]);
   const formSchema = useMemo(
     () =>
       baseSchema.extend({
         assigneeId: z
-          .number({ required_error: 'Selecione o responsável', invalid_type_error: 'Selecione o responsável' })
+          .number({
+            required_error: 'Selecione o responsável',
+            invalid_type_error: 'Selecione o responsável',
+          })
           .int()
           .positive('Selecione o responsável'),
         dueDate: z.string().min(1, 'Informe a data de vencimento'),
@@ -70,7 +77,6 @@ export const TaskFormModal = ({
     [baseSchema],
   );
 
-  // Option "selecionado atual" (para edição): usa assigneeId do root e name do include
   const currentAssigneeOption: UserOption | null = useMemo(() => {
     const id = initial?.assigneeId;
     if (!id) return null;
@@ -82,24 +88,23 @@ export const TaskFormModal = ({
     resolver: zodResolver(formSchema),
     defaultValues: initial
       ? {
-        title: initial.title,
-        description: initial.description ?? '',
-        status: initial.status,
-        priority: initial.priority,
-        // se dueDate vier null, deixa vazio pra forçar o usuário escolher (é obrigatório)
-        dueDate: toDateInput(initial.dueDate),
-        assigneeId: (initial.assigneeId ?? undefined) as unknown as number,
-        projectId: initial.projectId,
-      }
+          title: initial.title,
+          description: initial.description ?? '',
+          status: initial.status,
+          priority: initial.priority,
+          dueDate: toDateInput(initial.dueDate),
+          assigneeId: (initial.assigneeId ?? undefined) as unknown as number,
+          projectId: initial.projectId,
+        }
       : {
-        title: '',
-        description: '',
-        status: 'todo',
-        priority: 'medium',
-        dueDate: '',
-        assigneeId: undefined as unknown as number,
-        projectId: undefined,
-      },
+          title: '',
+          description: '',
+          status: 'todo',
+          priority: 'medium',
+          dueDate: '',
+          assigneeId: undefined as unknown as number,
+          projectId: undefined,
+        },
   });
 
   // Carregar projetos (para criação)
@@ -115,7 +120,6 @@ export const TaskFormModal = ({
     };
   }, [open]);
 
-  // Resetar o form ao abrir/trocar initial
   useEffect(() => {
     if (!open) return;
     if (initial) {
@@ -163,7 +167,10 @@ export const TaskFormModal = ({
 
         // Garante que o responsável atual esteja na lista ao editar
         const merged = currentAssigneeOption
-          ? [currentAssigneeOption, ...fetched.filter((o) => o.value !== currentAssigneeOption.value)]
+          ? [
+              currentAssigneeOption,
+              ...fetched.filter((o) => o.value !== currentAssigneeOption.value),
+            ]
           : fetched;
 
         // Evita re-render desnecessário
@@ -182,7 +189,10 @@ export const TaskFormModal = ({
     };
 
     // Se abrindo o modal de edição e ainda não temos a opção atual, insere imediatamente
-    if (currentAssigneeOption && !userOptions.some((o) => o.value === currentAssigneeOption.value)) {
+    if (
+      currentAssigneeOption &&
+      !userOptions.some((o) => o.value === currentAssigneeOption.value)
+    ) {
       setUserOptions((prev) => [currentAssigneeOption!, ...prev]);
     }
 
@@ -268,7 +278,9 @@ export const TaskFormModal = ({
               data={userOptions}
               value={field.value != null ? String(field.value) : ''}
               onChange={(v) => field.onChange(v ? Number(v) : undefined)}
-              nothingFoundMessage={searchTerm.trim().length === 0 ? 'Nenhum usuário' : 'Sem resultados'}
+              nothingFoundMessage={
+                searchTerm.trim().length === 0 ? 'Nenhum usuário' : 'Sem resultados'
+              }
               error={form.formState.errors.assigneeId?.message}
               withAsterisk
             />

@@ -37,7 +37,6 @@ const ProjectsPage = (): JSX.Element => {
   const [editing, setEditing] = useState<Project | null>(null);
   const [confirmId, setConfirmId] = useState<number | null>(null);
 
-  // Drawer de membros
   const [openMembers, setOpenMembers] = useState(false);
   const [membersProject, setMembersProject] = useState<Project | null>(null);
 
@@ -104,7 +103,6 @@ const ProjectsPage = (): JSX.Element => {
       cell: (value) => (value ? formatDateBR(value as string) : '—'),
       width: 120,
     },
-    // NOVA coluna: abrir Drawer de membros
     {
       id: 'members',
       header: 'Membros',
@@ -224,7 +222,6 @@ const ProjectsPage = (): JSX.Element => {
         </Group>
       </Modal>
 
-      {/* Drawer de membros (usa seu users.api.ts para buscar usuários) */}
       <ProjectMembersDrawer
         open={openMembers}
         onClose={() => setOpenMembers(false)}

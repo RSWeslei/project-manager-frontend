@@ -2,17 +2,10 @@ export type DateInput = Date | string | number | null | undefined;
 
 const DEFAULT_TZ = 'America/Sao_Paulo';
 
-const OPT_DATE: Intl.DateTimeFormatOptions = {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-};
+const OPT_DATE: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+const OPT_DATETIME: Intl.DateTimeFormatOptions = { ...OPT_DATE, hour: '2-digit', minute: '2-digit' };
 
-const OPT_DATETIME: Intl.DateTimeFormatOptions = {
-  ...OPT_DATE,
-  hour: '2-digit',
-  minute: '2-digit',
-};
+const DATE_ONLY_UTC_MIDNIGHT = /^(\d{4})-(\d{2})-(\d{2})T00:00:00(?:\.\d+)?Z$/;
 
 function isValidDate(d: Date): boolean {
   return !Number.isNaN(d.getTime());
@@ -33,12 +26,17 @@ function fromDateInput(input: DateInput): Date | null {
   const raw = String(input).trim();
   if (raw === '') return null;
 
-  const regex = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
-  if (regex) {
-    const year = Number(regex[1]);
-    const month = Number(regex[2]);
-    const day = Number(regex[3]);
-    const local = new Date(year, month - 1, day);
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (ymd) {
+    const [_, y, m, d] = ymd;
+    const local = new Date(Number(y), Number(m) - 1, Number(d));
+    return isValidDate(local) ? local : null;
+  }
+
+  const isoMid = DATE_ONLY_UTC_MIDNIGHT.exec(raw);
+  if (isoMid) {
+    const [_, y, m, d] = isoMid;
+    const local = new Date(Number(y), Number(m) - 1, Number(d));
     return isValidDate(local) ? local : null;
   }
 

@@ -16,11 +16,9 @@ export const taskCreateSchema = taskBase.extend({
     .positive('Selecione o projeto'),
 });
 
-export const taskUpdateSchema = taskBase
-  .partial({}) // mantém todos
-  .extend({
-    projectId: z.number().int().positive().optional().nullable(),
-  });
+export const taskUpdateSchema = taskBase.partial({}).extend({
+  projectId: z.number().int().positive().optional().nullable(),
+});
 
 export type TaskCreateInput = z.infer<typeof taskCreateSchema>;
 export type TaskUpdateInput = z.infer<typeof taskUpdateSchema>;

@@ -136,9 +136,9 @@ const DashboardPage = () => {
                     />
                     <YAxis tick={{ fill: 'var(--mantine-color-dimmed)' }} />
                     <Tooltip
+                      cursor={{ fill: 'var(--fg)', opacity: 0.06 }}
                       wrapperStyle={{ outline: 'none' }}
                       contentStyle={{
-                        background: 'var(--surface)',
                         border: '1px solid var(--border)',
                         color: 'var(--fg)',
                       }}
@@ -183,6 +183,7 @@ const DashboardPage = () => {
                       ))}
                     </Pie>
                     <Tooltip
+                      cursor={{ fill: 'var(--fg)', opacity: 0.06 }}
                       wrapperStyle={{ outline: 'none' }}
                       contentStyle={{
                         background: 'var(--surface)',
@@ -215,13 +216,6 @@ const DashboardPage = () => {
           verticalSpacing="sm"
           striped
           highlightOnHover
-          style={{
-            ['--table-striped-color']: 'color-mix(in oklab, var(--border) 24%, var(--surface))',
-            ['--table-hover-color']: 'color-mix(in oklab, var(--border) 36%, var(--surface))',
-            ['--table-border-color']: 'var(--border)',
-            background: 'var(--surface)',
-            color: 'var(--fg)',
-          }}
         >
           <Table.Thead>
             <Table.Tr>
